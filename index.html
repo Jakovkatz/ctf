@@ -1,4 +1,12 @@
-<script>
-document.body.style.background = "yellow";
-document.body.innerHTML += "<h1 style='color:red;text-align:center;'>XSS WORKS!</h1>";
-</script>
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>XSS Test</title>
+  </head>
+  <body>
+    <script>
+      document.body.style.background = "yellow";
+      document.body.innerHTML += "<h1 style='color:red;text-align:center;'>XSS WORKS!</h1>";
+    </script>
+  </body>
+</html>
