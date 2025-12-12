@@ -1,13 +1,49 @@
 <!DOCTYPE html>
-<html>
-<body style="font-family:monospace">
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Third-Party Iframe – Leak Test</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: #111;
+            color: #0f0;
+            padding: 10px;
+        }
+        h1, h2 {
+            color: #0ff;
+        }
+        pre {
+            white-space: pre-wrap;
+            word-break: break-all;
+            background: #222;
+            padding: 8px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
 
 <h1>Third-Party Iframe</h1>
+<p>Running inside Taboola WebView (injected via MITM).</p>
 
 <script>
-document.body.innerHTML += "<h2>document.referrer:</h2><pre>" + document.referrer + "</pre>";
+    // מציג מי טען אותנו (העמוד של Taboola)
+    document.body.innerHTML += "<h2>document.referrer:</h2><pre>" +
+        document.referrer + "</pre>";
 
-document.body.innerHTML += "<h2>window.location.href:</h2><pre>" + window.location.href + "</pre>";
+    // מציג את ה-URL של ה-iframe עצמו (אולי יש פרמטרים מעניינים)
+    document.body.innerHTML += "<h2>window.location.href:</h2><pre>" +
+        window.location.href + "</pre>";
+
+    // אופציונלי: להאזין ל-postMessage אם בעתיד תרצה
+    window.addEventListener("message", function (e) {
+        document.body.innerHTML += "<h2>postMessage event:</h2><pre>" +
+            JSON.stringify({
+                origin: e.origin,
+                data: e.data
+            }, null, 2) + "</pre>";
+    }, false);
 </script>
 
 </body>
